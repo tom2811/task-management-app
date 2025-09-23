@@ -1,73 +1,134 @@
-# React + TypeScript + Vite
+# Task Management App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, responsive task management application built with React, TypeScript,
+and Vite. Features a clean UI with pagination, filtering, bulk operations, and
+persistent state management.
 
-Currently, two official plugins are available:
+## 🚀 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Core Functionality
 
-## React Compiler
+- **Task Management**: Create, read, update, and delete tasks
+- **Task Status**: Track tasks with three states - Todo, In Progress, Done
+- **Priority Levels**: Organize tasks by Low, Medium, and High priority
+- **Due Dates**: Set optional due dates for tasks
+- **Bulk Operations**: Select and delete multiple tasks at once
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### User Experience
 
-## Expanding the ESLint configuration
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+- **Pagination**: Navigate through tasks with persistent page state
+- **Filtering**: Filter tasks by All, Active, or Completed status
+- **Real-time Updates**: Instant UI updates with optimistic updates
+- **Persistent State**: Page numbers and filters persist across browser
+  refreshes
+- **Loading States**: Smooth loading indicators and error handling
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Technical Features
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Type Safety**: Full TypeScript implementation
+- **State Management**: Zustand for global state management
+- **Data Fetching**: TanStack Query for server state management
+- **Form Validation**: React Hook Form with Zod schema validation
+- **Modern UI**: ShadCN components with Tailwind CSS styling
+- **Mock API**: JSON Server for development and testing
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Frontend
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- **React 19**
+- **TypeScript**
+- **Vite**
+- **Tailwind CSS**
+- **ShadCN**
+- **Lucide React**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### State Management & Data Fetching
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Zustand** - Lightweight state management
+- **TanStack Query** - Server state management
+- **React Hook Form** - Form handling
+- **Zod** - Schema validation
+
+### Development Tools
+
+- **JSON Server** - Mock REST API
+- **ESLint** - Code linting
+- **TypeScript ESLint** - TypeScript-specific linting rules
+
+## 📦 Installation
+
+### Prerequisites
+
+- Node.js (version 18 or higher)
+- npm or yarn package manager
+
+### Setup Instructions
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd task-management-app
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   npm install
+   ```
+
+3. **Start the development servers**
+
+   You need to run both the frontend and the mock API server:
+
+   **Terminal 1 - Frontend Development Server:**
+
+   ```bash
+   npm run dev
+   ```
+
+   **Terminal 2 - Mock API Server:**
+
+   ```bash
+   npm run server
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:5173
+   - API Server: http://localhost:3001
+
+## 🎯 Usage
+
+### Creating Tasks
+
+1. Click the "Add Task" button in the header
+2. Fill in the task details:
+   - Task text (required)
+   - Due date (optional)
+   - Priority level (Low, Medium, High)
+3. Click "Create Task" to save
+
+### Managing Tasks
+
+- **Edit**: Click the edit icon on any task card
+- **Delete**: Click the delete icon and confirm
+- **Change Status**: Use the status dropdown on each task card
+- **Bulk Delete**: Select multiple tasks using checkboxes and use bulk actions
+
+### Filtering and Navigation
+
+- **Filter**: Use the filter dropdown to show All, Active, or Completed tasks
+- **Pagination**: Navigate through pages using Previous/Next buttons
+- **Persistent State**: Page numbers and filters are saved in the URL and
+  persist across refreshes
+
+## 🔍 API Endpoints
+
+The mock API server provides the following endpoints:
+
+- `GET /tasks` - Get all tasks (supports pagination and filtering)
+- `POST /tasks` - Create a new task
+- `PATCH /tasks/:id` - Update a task
+- `DELETE /tasks/:id` - Delete a task
