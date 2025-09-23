@@ -2,47 +2,43 @@ import { create } from "zustand";
 
 export type TaskPriority = "low" | "medium" | "high";
 export type TaskStatus = "todo" | "in-progress" | "done";
+export type TaskFilter = "all" | "active" | "completed";
 
 export interface Task {
   id: string;
   text: string;
-  dueDate: string;
+  dueDate?: string;
   priority: TaskPriority;
   status: TaskStatus;
 }
 
 export interface StoreState {
   tasks: Task[];
-  addTask: (task: Omit<Task, "id" | "status">) => void;
-  deleteTask: (taskId: string) => void;
-  toggleTaskStatus: (taskId: string) => void;
+  filter: TaskFilter;
+  selectedTaskIds: string[];
+  setFilter: (filter: TaskFilter) => void;
+  toggleTaskSelection: (taskId: string) => void;
+  clearTaskSelection: () => void;
 }
 
 export const useTaskStore = create<StoreState>((set) => ({
-  tasks: [], // Initial state
+  tasks: [],
+  filter: "all",
+  selectedTaskIds: [],
 
-  addTask: (task) => {
-    const newTask: Task = {
-      ...task,
-      id: crypto.randomUUID(),
-      status: "todo",
-    };
-    set((state) => ({ tasks: [...state.tasks, newTask] }));
+  setFilter: (filter) => {
+    set(() => ({ filter }));
   },
 
-  deleteTask: (taskId) => {
+  toggleTaskSelection: (taskId) => {
     set((state) => ({
-      tasks: state.tasks.filter((task) => task.id !== taskId),
+      selectedTaskIds: state.selectedTaskIds.includes(taskId)
+        ? state.selectedTaskIds.filter((id) => id !== taskId)
+        : [...state.selectedTaskIds, taskId],
     }));
   },
 
-  toggleTaskStatus: (taskId) => {
-    set((state) => ({
-      tasks: state.tasks.map((task) =>
-        task.id === taskId
-          ? { ...task, status: task.status === "done" ? "todo" : "done" }
-          : task
-      ),
-    }));
+  clearTaskSelection: () => {
+    set({ selectedTaskIds: [] });
   },
 }));
