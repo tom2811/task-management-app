@@ -4,11 +4,27 @@ import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 import { TaskList } from "@/components/tasks/TaskList";
 import { useGetTasks } from "@/hooks/useGetTasks";
 import { useTaskStore } from "@/store/taskStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const TaskPage = () => {
-  const [currentPage, setCurrentPage] = useState(1);
+  const getInitialPage = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get("page");
+    return pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1;
+  };
+
+  const [currentPage, setCurrentPage] = useState(getInitialPage);
   const filter = useTaskStore((state) => state.filter);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (currentPage === 1) {
+      url.searchParams.delete("page");
+    } else {
+      url.searchParams.set("page", currentPage.toString());
+    }
+    window.history.replaceState({}, "", url.toString());
+  }, [currentPage]);
 
   const { data, isLoading, isError, error, refetch } = useGetTasks({
     page: currentPage,
@@ -25,7 +41,7 @@ export const TaskPage = () => {
         <TaskFormModal />
       </header>
 
-      <div className="flex flex-row items-center justify-end my-6 space-y-0 space-x-2">
+      <div className="flex flex-row items-center justify-end my-8 space-y-0 space-x-2">
         <BulkActions />
         <TaskFilter />
       </div>
