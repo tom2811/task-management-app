@@ -13,19 +13,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useCreateTask } from "@/hooks/useCreateTask";
+import { formSchema } from "@/lib/task-schemas";
 import { cn } from "@/lib/utils";
-
-const formSchema = z.object({
-  text: z
-    .string()
-    .min(1, "Task description cannot be empty.")
-    .max(120, "Task cannot exceed 120 characters."),
-  dueDate: z
-    .date()
-    .min(startOfDay(new Date()), "Due date cannot be in the past.")
-    .optional(),
-  priority: z.enum(["low", "medium", "high"]),
-});
 
 type FormInputs = z.infer<typeof formSchema>;
 
@@ -63,7 +52,6 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      {/* Text Input */}
       <Controller
         name="text"
         control={form.control}
@@ -83,7 +71,6 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
         </p>
       )}
 
-      {/* Priority Select */}
       <Controller
         name="priority"
         control={form.control}
@@ -100,7 +87,6 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
         )}
       />
 
-      {/* Date Picker */}
       <Controller
         name="dueDate"
         control={form.control}
