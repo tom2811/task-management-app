@@ -1,11 +1,7 @@
-import { Button } from "./components/ui/button";
+import { TaskPage } from "./pages/TaskPage";
 
 function App() {
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <Button>Hello World</Button>
-    </div>
-  );
+  return <TaskPage />;
 }
 
 export default App;
