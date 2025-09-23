@@ -19,8 +19,8 @@ export const TaskPage = () => {
   const totalCount = data?.totalCount || 0;
 
   return (
-    <div className="container mx-auto p-4">
-      <header className="flex items-center justify-between pb-4 border-b">
+    <div className="container mx-auto p-4 pt-0">
+      <header className="sticky top-0 z-10 bg-background flex items-center justify-between py-4 border-b">
         <h1 className="text-2xl font-bold tracking-wide">Task Management</h1>
         <TaskFormModal />
       </header>

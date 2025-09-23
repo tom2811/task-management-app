@@ -105,7 +105,7 @@ export const TaskList = ({
       </section>
 
       {/* Pagination */}
-      <div className="flex justify-center items-center space-x-4 mt-8">
+      <div className="flex justify-center items-center space-x-4 mt-8 md:mt-18">
         <Button
           onClick={() => setPage(page - 1)}
           disabled={page === 1}
