@@ -28,13 +28,17 @@ export const BulkActions = () => {
     setShowConfirmDialog(false);
   };
 
+  if (selectedTaskIds.length === 0) {
+    return null;
+  }
+
   return (
     <>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end">
         <Button
           variant="destructive"
           onClick={handleBulkDelete}
-          disabled={selectedTaskIds.length === 0 || isPending}
+          disabled={isPending}
         >
           {isPending
             ? "Deleting..."
@@ -45,7 +49,7 @@ export const BulkActions = () => {
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Bulk Deletion</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete {selectedTaskIds.length} selected
               tasks? This action cannot be undone.

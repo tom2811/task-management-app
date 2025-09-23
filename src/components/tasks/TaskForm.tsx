@@ -26,7 +26,11 @@ const formSchema = z.object({
 
 type FormInputs = z.infer<typeof formSchema>;
 
-export const TaskForm = () => {
+interface TaskFormProps {
+  onClose?: () => void;
+}
+
+export const TaskForm = ({ onClose }: TaskFormProps) => {
   const { mutate: createTaskMutation, isPending } = useCreateTask();
 
   const form = useForm<FormInputs>({
@@ -34,21 +38,23 @@ export const TaskForm = () => {
     defaultValues: {
       text: "",
       priority: "medium",
-      dueDate: undefined,
     },
   });
 
   const onSubmit: SubmitHandler<FormInputs> = (data) => {
     const taskData = {
       ...data,
-      // Only format dueDate if it exists
       dueDate: data.dueDate ? format(data.dueDate, "yyyy-MM-dd") : undefined,
     };
-    createTaskMutation(taskData);
-    form.reset({
-      text: "",
-      priority: "medium",
-      dueDate: undefined,
+    createTaskMutation(taskData, {
+      onSuccess: () => {
+        form.reset({
+          text: "",
+          priority: "medium",
+          dueDate: undefined,
+        });
+        onClose?.();
+      },
     });
   };
 

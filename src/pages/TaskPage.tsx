@@ -1,6 +1,6 @@
 import { BulkActions } from "@/components/tasks/BulkActions";
 import { TaskFilter } from "@/components/tasks/TaskFilter";
-import { TaskForm } from "@/components/tasks/TaskForm";
+import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 import { TaskList } from "@/components/tasks/TaskList";
 import { useGetTasks } from "@/hooks/useGetTasks";
 
@@ -28,23 +28,18 @@ export const TaskPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Task Management</h1>
+    <div className="container mx-auto p-4">
+      <header className="flex items-center justify-between pb-4 border-b">
+        <h1 className="text-2xl font-bold tracking-wide">Task Management</h1>
+        <TaskFormModal />
       </header>
 
-      <div className="grid gap-8 md:grid-cols-3">
-        <aside className="md:col-span-1">
-          <TaskForm />
-        </aside>
-        <main className="md:col-span-2">
-          <div className="mb-4">
-            <TaskFilter />
-            <BulkActions />
-          </div>
-          <TaskList tasks={tasks || []} />
-        </main>
+      <div className="flex flex-row items-center justify-end my-6 space-y-0 space-x-2">
+        <BulkActions />
+        <TaskFilter />
       </div>
+
+      <TaskList tasks={tasks || []} />
     </div>
   );
 };

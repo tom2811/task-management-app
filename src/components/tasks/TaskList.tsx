@@ -9,13 +9,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
@@ -30,7 +24,7 @@ import { useUpdateTask } from "@/hooks/useUpdateTask";
 import { isTaskOverdue } from "@/lib/task-utils";
 import { cn } from "@/lib/utils";
 import { ArrowDownCircle, ArrowUpCircle, MinusCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 import {
   useTaskStore,
   type Task,
@@ -113,6 +107,18 @@ export const TaskList = ({ tasks }: TaskListProps) => {
     updateTaskMutation({ taskId, updates: { status: newStatus } });
   };
 
+  const handleCardClick = (e: MouseEvent<HTMLDivElement>, taskId: string) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("a")
+    ) {
+      return;
+    }
+    toggleTaskSelection(taskId);
+  };
+
   // Filtering logic
   const filteredTasks = tasks.filter((task) => {
     if (filter === "all") return true;
@@ -129,9 +135,7 @@ export const TaskList = ({ tasks }: TaskListProps) => {
     return (
       <div className="text-center text-gray-500 mt-12">
         <h3 className="text-lg font-semibold">{emptyMessage}</h3>
-        {filter === "all" && (
-          <p>Add a new task using the form to get started!</p>
-        )}
+        {filter === "all" && <p>Add a new task to get started!</p>}
       </div>
     );
   }
@@ -139,14 +143,15 @@ export const TaskList = ({ tasks }: TaskListProps) => {
   return (
     <>
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold">Your Tasks</h2>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {filteredTasks.map((task) => {
             const overdue = isTaskOverdue(task.dueDate);
             return (
               <Card
                 key={task.id}
+                onClick={(e) => handleCardClick(e, task.id)}
                 className={cn(
+                  "cursor-pointer",
                   task.status === "done" ? "bg-muted/50" : "",
                   overdue &&
                     task.status !== "done" &&
@@ -161,6 +166,7 @@ export const TaskList = ({ tasks }: TaskListProps) => {
                 <CardHeader className="flex flex-row items-center justify-between pb-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
+                      className="cursor-pointer"
                       checked={selectedTaskIds.includes(task.id)}
                       onCheckedChange={() => toggleTaskSelection(task.id)}
                       aria-label="Select task for bulk operation"
@@ -198,73 +204,82 @@ export const TaskList = ({ tasks }: TaskListProps) => {
                       handleStatusChange(task.id, value)
                     }
                   >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[120px] cursor-pointer">
                       <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
                       {statusOptions.map((status) => (
-                        <SelectItem key={status} value={status}>
+                        <SelectItem
+                          key={status}
+                          value={status}
+                          className="cursor-pointer"
+                        >
                           {status.replace("-", " ").toUpperCase()}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </CardHeader>
-                <CardContent>
-                  <p
-                    className={cn(
-                      "text-sm text-muted-foreground",
-                      overdue && task.status !== "done"
-                        ? "text-red-500 font-semibold"
-                        : ""
-                    )}
-                  >
-                    {task.dueDate ? `Due: ${task.dueDate}` : "Due: Not Set"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Priority:{" "}
-                    <span
+                <CardContent className="flex items-end justify-between">
+                  <div>
+                    <p
                       className={cn(
-                        "inline-flex items-center",
-                        getPriorityStyles(task.priority)
+                        "text-sm text-muted-foreground",
+                        overdue && task.status !== "done"
+                          ? "text-red-500 font-semibold"
+                          : ""
                       )}
                     >
-                      {task.priority}
-                      {getPriorityIcon(task.priority)}
-                    </span>
-                  </p>
-                </CardContent>
-                <CardFooter className="flex justify-end space-x-2">
-                  {editingTaskId === task.id ? (
-                    <>
-                      <Button size="sm" onClick={() => handleSaveEdit(task.id)}>
-                        Save
-                      </Button>
+                      {task.dueDate ? `Due: ${task.dueDate}` : "Due: Not Set"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Priority:{" "}
+                      <span
+                        className={cn(
+                          "inline-flex items-center",
+                          getPriorityStyles(task.priority)
+                        )}
+                      >
+                        {task.priority}
+                        {getPriorityIcon(task.priority)}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {editingTaskId === task.id ? (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => handleSaveEdit(task.id)}
+                        >
+                          Save
+                        </Button>
+                      </>
+                    ) : (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={handleCancelEdit}
+                        onClick={() => handleEditClick(task)}
                       >
-                        Cancel
+                        Edit
                       </Button>
-                    </>
-                  ) : (
+                    )}
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
-                      onClick={() => handleEditClick(task)}
+                      onClick={() => setTaskToDelete(task)}
                     >
-                      Edit
+                      Delete
                     </Button>
-                  )}
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setTaskToDelete(task)}
-                  >
-                    Delete
-                  </Button>
-                </CardFooter>
+                  </div>
+                </CardContent>
               </Card>
             );
           })}
