@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useBulkDeleteTasks } from "@/hooks/useBulkDeleteTasks";
+import { Loader2Icon } from "lucide-react";
 import { useState } from "react";
 import { useTaskStore } from "../../store/taskStore";
 
@@ -40,9 +41,11 @@ export const BulkActions = () => {
           onClick={handleBulkDelete}
           disabled={isPending}
         >
-          {isPending
-            ? "Deleting..."
-            : `Delete Selected (${selectedTaskIds.length})`}
+          {isPending ? (
+            <Loader2Icon className="animate-spin" />
+          ) : (
+            `Delete Selected (${selectedTaskIds.length})`
+          )}
         </Button>
       </div>
 
@@ -57,8 +60,11 @@ export const BulkActions = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete}>
-              Delete
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={isPending}
+            >
+              {isPending ? <Loader2Icon className="animate-spin" /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

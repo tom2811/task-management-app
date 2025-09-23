@@ -23,8 +23,16 @@ import { useDeleteTask } from "@/hooks/useDeleteTask";
 import { useUpdateTask } from "@/hooks/useUpdateTask";
 import { isTaskOverdue } from "@/lib/task-utils";
 import { cn } from "@/lib/utils";
-import { ArrowDownCircle, ArrowUpCircle, MinusCircle } from "lucide-react";
-import { useState, type MouseEvent } from "react";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  CircleCheck,
+  CircleDot,
+  CircleDotDashed,
+  Loader2Icon,
+  MinusCircle,
+} from "lucide-react";
+import { useEffect, useState, type MouseEvent } from "react";
 import {
   useTaskStore,
   type Task,
@@ -60,12 +68,53 @@ const getPriorityIcon = (priority: TaskPriority) => {
   }
 };
 
+const getStatusStyles = (status: TaskStatus) => {
+  switch (status) {
+    case "todo":
+      return "text-gray-500 font-semibold";
+    case "in-progress":
+      return "text-blue-500 font-semibold";
+    case "done":
+      return "text-green-500 font-semibold";
+    default:
+      return "";
+  }
+};
+
+const getStatusIcon = (status: TaskStatus) => {
+  switch (status) {
+    case "todo":
+      return <CircleDotDashed className="h-4 w-4" />;
+    case "in-progress":
+      return <CircleDot className="h-4 w-4" />;
+    case "done":
+      return <CircleCheck className="h-4 w-4" />;
+    default:
+      return null;
+  }
+};
+
 interface TaskListProps {
   tasks: Task[];
+  totalCount: number;
+  page: number;
+  setPage: (page: number) => void;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  refetch: () => void;
 }
 
-export const TaskList = ({ tasks }: TaskListProps) => {
-  const filter = useTaskStore((state) => state.filter);
+export const TaskList = ({
+  tasks,
+  totalCount,
+  page,
+  setPage,
+  isLoading,
+  isError,
+  error,
+  refetch,
+}: TaskListProps) => {
   const selectedTaskIds = useTaskStore((state) => state.selectedTaskIds);
   const toggleTaskSelection = useTaskStore(
     (state) => state.toggleTaskSelection
@@ -75,13 +124,22 @@ export const TaskList = ({ tasks }: TaskListProps) => {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState<string>("");
 
-  const { mutate: deleteTaskMutation } = useDeleteTask();
-  const { mutate: updateTaskMutation } = useUpdateTask();
+  const { mutate: deleteTaskMutation, isPending: isDeleting } = useDeleteTask();
+  const { mutate: updateTaskMutation, isPending: isUpdating } = useUpdateTask();
+
+  useEffect(() => {
+    if (!isLoading && tasks.length === 0 && page > 1) {
+      setPage(page - 1);
+    }
+  }, [tasks.length, page, setPage, isLoading]);
 
   const handleDeleteConfirm = () => {
     if (taskToDelete) {
-      deleteTaskMutation(taskToDelete.id);
-      setTaskToDelete(null);
+      deleteTaskMutation(taskToDelete.id, {
+        onSuccess: () => {
+          setTaskToDelete(null);
+        },
+      });
     }
   };
 
@@ -92,9 +150,15 @@ export const TaskList = ({ tasks }: TaskListProps) => {
 
   const handleSaveEdit = (taskId: string) => {
     if (editingText.trim() !== "") {
-      updateTaskMutation({ taskId, updates: { text: editingText.trim() } });
-      setEditingTaskId(null);
-      setEditingText("");
+      updateTaskMutation(
+        { taskId, updates: { text: editingText.trim() } },
+        {
+          onSuccess: () => {
+            setEditingTaskId(null);
+            setEditingText("");
+          },
+        }
+      );
     }
   };
 
@@ -119,23 +183,36 @@ export const TaskList = ({ tasks }: TaskListProps) => {
     toggleTaskSelection(taskId);
   };
 
-  // Filtering logic
-  const filteredTasks = tasks.filter((task) => {
-    if (filter === "all") return true;
-    if (filter === "active") return task.status !== "done";
-    if (filter === "completed") return task.status === "done";
-    return true;
-  });
+  const tasksPerPage = 6;
+  const totalPages = Math.ceil(totalCount / tasksPerPage);
 
-  if (filteredTasks.length === 0) {
-    let emptyMessage = "No tasks yet. Add one above!";
-    if (filter === "active") emptyMessage = "No active tasks.";
-    if (filter === "completed") emptyMessage = "No completed tasks.";
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2Icon className="animate-spin h-12 w-12 text-gray-500" />
+      </div>
+    );
+  }
 
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <div className="text-center text-red-500 border-2 border-red-200 bg-red-50 rounded-lg p-8">
+          <h3 className="text-2xl font-semibold mb-4">Error Loading Tasks</h3>
+          <p className="text-lg mb-6">{error?.message}</p>
+          <Button onClick={() => refetch()} variant="destructive">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) {
     return (
       <div className="text-center text-gray-500 mt-12">
-        <h3 className="text-lg font-semibold">{emptyMessage}</h3>
-        {filter === "all" && <p>Add a new task to get started!</p>}
+        <h3 className="text-lg font-semibold">No tasks found.</h3>
+        <p>Add a new task to get started!</p>
       </div>
     );
   }
@@ -144,14 +221,14 @@ export const TaskList = ({ tasks }: TaskListProps) => {
     <>
       <section className="space-y-4">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {filteredTasks.map((task) => {
+          {tasks.map((task) => {
             const overdue = isTaskOverdue(task.dueDate);
             return (
               <Card
                 key={task.id}
                 onClick={(e) => handleCardClick(e, task.id)}
                 className={cn(
-                  "cursor-pointer",
+                  "h-56 cursor-pointer flex flex-col",
                   task.status === "done" ? "bg-muted/50" : "",
                   overdue &&
                     task.status !== "done" &&
@@ -163,65 +240,47 @@ export const TaskList = ({ tasks }: TaskListProps) => {
                     : ""
                 )}
               >
-                <CardHeader className="flex flex-row items-center justify-between pb-4">
-                  <div className="flex items-center space-x-2">
+                <CardHeader className="h-32 flex flex-col justify-start">
+                  <div className="flex items-start space-x-2 w-full">
                     <Checkbox
-                      className="cursor-pointer"
+                      className="cursor-pointer flex-shrink-0 mt-1"
                       checked={selectedTaskIds.includes(task.id)}
                       onCheckedChange={() => toggleTaskSelection(task.id)}
                       aria-label="Select task for bulk operation"
                     />
-                    {editingTaskId === task.id ? (
-                      <Input
-                        value={editingText}
-                        onChange={(e) => setEditingText(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleSaveEdit(task.id);
-                          if (e.key === "Escape") handleCancelEdit();
-                        }}
-                        className="mr-2"
-                      />
-                    ) : (
-                      <CardTitle
-                        className={cn(
-                          `text-lg`,
-                          task.status === "done"
-                            ? "line-through text-muted-foreground"
-                            : "",
-                          overdue && task.status !== "done"
-                            ? "text-red-600"
-                            : ""
-                        )}
-                      >
-                        {task.text}
-                      </CardTitle>
-                    )}
-                  </div>
-
-                  <Select
-                    value={task.status}
-                    onValueChange={(value: TaskStatus) =>
-                      handleStatusChange(task.id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-[120px] cursor-pointer">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map((status) => (
-                        <SelectItem
-                          key={status}
-                          value={status}
-                          className="cursor-pointer"
+                    <div className="flex-1">
+                      {editingTaskId === task.id ? (
+                        <Input
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit(task.id);
+                            if (e.key === "Escape") handleCancelEdit();
+                          }}
+                          className="w-full"
+                          maxLength={120}
+                        />
+                      ) : (
+                        <CardTitle
+                          className={cn(
+                            "text-base leading-tight break-words hyphens-auto",
+                            task.status === "done"
+                              ? "line-through text-muted-foreground"
+                              : "",
+                            overdue && task.status !== "done"
+                              ? "text-red-600"
+                              : ""
+                          )}
+                          title={task.text}
                         >
-                          {status.replace("-", " ").toUpperCase()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                          {task.text}
+                        </CardTitle>
+                      )}
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="flex items-end justify-between">
-                  <div>
+                <CardContent className="flex-1 flex flex-col justify-end">
+                  <div className="space-y-1">
                     <p
                       className={cn(
                         "text-sm text-muted-foreground",
@@ -245,39 +304,86 @@ export const TaskList = ({ tasks }: TaskListProps) => {
                       </span>
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {editingTaskId === task.id ? (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleCancelEdit}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => handleSaveEdit(task.id)}
-                        >
-                          Save
-                        </Button>
-                      </>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditClick(task)}
-                      >
-                        Edit
-                      </Button>
-                    )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setTaskToDelete(task)}
+                  <div className="flex justify-between items-center">
+                    <Select
+                      value={task.status}
+                      onValueChange={(value: TaskStatus) =>
+                        handleStatusChange(task.id, value)
+                      }
                     >
-                      Delete
-                    </Button>
+                      <SelectTrigger className="w-auto border-none focus:ring-0 p-0 h-auto bg-transparent">
+                        <SelectValue asChild>
+                          <span
+                            className={cn(
+                              "inline-flex items-center text-sm",
+                              getStatusStyles(task.status)
+                            )}
+                          >
+                            {getStatusIcon(task.status)}
+                            <span className="ml-1">
+                              {task.status.replace("-", " ").toUpperCase()}
+                            </span>
+                          </span>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statusOptions.map((status) => (
+                          <SelectItem
+                            key={status}
+                            value={status}
+                            className="cursor-pointer"
+                          >
+                            <div className="inline-flex items-center">
+                              {getStatusIcon(status)}
+                              <span className="ml-1">
+                                {status.replace("-", " ").toUpperCase()}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex-shrink-0">
+                      {editingTaskId === task.id ? (
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleSaveEdit(task.id)}
+                            disabled={isUpdating || editingText === task.text}
+                          >
+                            {isUpdating ? (
+                              <Loader2Icon className="animate-spin" />
+                            ) : (
+                              "Save"
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditClick(task)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => setTaskToDelete(task)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -285,6 +391,26 @@ export const TaskList = ({ tasks }: TaskListProps) => {
           })}
         </div>
       </section>
+
+      <div className="flex justify-center items-center space-x-4 mt-8">
+        <Button
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1}
+          variant="outline"
+        >
+          Previous
+        </Button>
+        <span>
+          Page {page} of {totalPages}
+        </span>
+        <Button
+          onClick={() => setPage(page + 1)}
+          disabled={page === totalPages}
+          variant="outline"
+        >
+          Next
+        </Button>
+      </div>
 
       {/* Alert Dialog */}
       <AlertDialog
@@ -297,15 +423,26 @@ export const TaskList = ({ tasks }: TaskListProps) => {
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
               task:
-              <span className="font-semibold block mt-2">
-                "{taskToDelete?.text}"
+              <span className="font-semibold block mt-2 break-all">
+                {"`"}
+                {taskToDelete?.text && taskToDelete.text.length > 50
+                  ? `${taskToDelete.text.slice(0, 30)}...`
+                  : taskToDelete?.text}
+                {"`"}
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>
-              Confirm
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <Loader2Icon className="animate-spin" />
+              ) : (
+                "Confirm"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

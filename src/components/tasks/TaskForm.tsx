@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfDay } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2Icon } from "lucide-react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 
@@ -16,7 +16,10 @@ import { useCreateTask } from "@/hooks/useCreateTask";
 import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
-  text: z.string().min(1, "Task description cannot be empty."),
+  text: z
+    .string()
+    .min(1, "Task description cannot be empty.")
+    .max(120, "Task cannot exceed 120 characters."),
   dueDate: z
     .date()
     .min(startOfDay(new Date()), "Due date cannot be in the past.")
@@ -60,8 +63,6 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <h2 className="text-xl font-semibold">Add New Task</h2>
-
       {/* Text Input */}
       <Controller
         name="text"
@@ -72,6 +73,7 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
             {...field}
             disabled={isPending}
             className={form.formState.errors.text ? "border-red-500" : ""}
+            maxLength={120}
           />
         )}
       />
@@ -141,7 +143,11 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
       )}
 
       <Button type="submit" className="w-full" disabled={isPending}>
-        {isPending ? "Adding..." : "Add Task"}
+        {isPending ? (
+          <Loader2Icon className="animate-spin mx-auto" />
+        ) : (
+          "Add Task"
+        )}
       </Button>
     </form>
   );

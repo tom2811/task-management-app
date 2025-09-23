@@ -23,10 +23,11 @@ export interface StoreState {
 
 export const useTaskStore = create<StoreState>((set) => ({
   tasks: [],
-  filter: "all",
+  filter: (localStorage.getItem("task-filter") as TaskFilter) || "all",
   selectedTaskIds: [],
 
   setFilter: (filter) => {
+    localStorage.setItem("task-filter", filter);
     set(() => ({ filter }));
   },
 

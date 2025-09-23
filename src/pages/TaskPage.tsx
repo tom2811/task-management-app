@@ -3,29 +3,20 @@ import { TaskFilter } from "@/components/tasks/TaskFilter";
 import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 import { TaskList } from "@/components/tasks/TaskList";
 import { useGetTasks } from "@/hooks/useGetTasks";
+import { useTaskStore } from "@/store/taskStore";
+import { useState } from "react";
 
 export const TaskPage = () => {
-  const { data: tasks, isLoading, isError, error } = useGetTasks();
+  const [currentPage, setCurrentPage] = useState(1);
+  const filter = useTaskStore((state) => state.filter);
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-4 md:p-8 text-center">
-        <h1 className="text-3xl font-bold tracking-tight">Task Management</h1>
-        <p className="text-muted-foreground">Loading tasks...</p>
-      </div>
-    );
-  }
+  const { data, isLoading, isError, error, refetch } = useGetTasks({
+    page: currentPage,
+    filter,
+  });
 
-  if (isError) {
-    return (
-      <div className="container mx-auto p-4 md:p-8 text-center text-red-500">
-        <h1 className="text-3xl font-bold tracking-tight">Task Management</h1>
-        <p className="text-muted-foreground">
-          Error loading tasks: {error?.message}
-        </p>
-      </div>
-    );
-  }
+  const tasks = data?.tasks || [];
+  const totalCount = data?.totalCount || 0;
 
   return (
     <div className="container mx-auto p-4">
@@ -39,7 +30,16 @@ export const TaskPage = () => {
         <TaskFilter />
       </div>
 
-      <TaskList tasks={tasks || []} />
+      <TaskList
+        tasks={tasks}
+        totalCount={totalCount}
+        page={currentPage}
+        setPage={setCurrentPage}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        refetch={refetch}
+      />
     </div>
   );
 };
