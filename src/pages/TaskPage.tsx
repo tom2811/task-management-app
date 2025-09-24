@@ -62,6 +62,7 @@ export const TaskPage = () => {
         isError={isError}
         error={error}
         refetch={refetch}
+        filter={filter}
       />
     </div>
   );

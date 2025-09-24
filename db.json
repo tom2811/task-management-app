@@ -5,12 +5,14 @@
       "dueDate": "2025-09-24",
       "priority": "high",
       "status": "in-progress",
+      "order": 2,
       "id": 8
     },
     {
       "text": "Design and implement an employee dashboard with role-based access, real-time notifications, and reporting features",
       "priority": "medium",
       "status": "todo",
+      "order": 1,
       "id": 9
     }
   ]

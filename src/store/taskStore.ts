@@ -10,6 +10,7 @@ export interface Task {
   dueDate?: string;
   priority: TaskPriority;
   status: TaskStatus;
+  order?: number;
 }
 
 export interface StoreState {

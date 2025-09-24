@@ -13,6 +13,7 @@ persistent state management.
 - **Priority Levels**: Organize tasks by Low, Medium, and High priority
 - **Due Dates**: Set optional due dates for tasks
 - **Bulk Operations**: Select and delete multiple tasks at once
+- **Drag & Drop Reordering**: Reorder tasks by dragging them to new positions
 
 ### User Experience
 
@@ -50,6 +51,7 @@ persistent state management.
 - **TanStack Query** - Server state management
 - **React Hook Form** - Form handling
 - **Zod** - Schema validation
+- **@dnd-kit** - Drag and drop functionality
 
 ### Development Tools
 
@@ -112,10 +114,12 @@ persistent state management.
 
 ### Managing Tasks
 
-- **Edit**: Click the edit icon on any task card
-- **Delete**: Click the delete icon and confirm
+- **Edit**: Click the edit button on any task card
+- **Delete**: Click the delete button and confirm
 - **Change Status**: Use the status dropdown on each task card
 - **Bulk Delete**: Select multiple tasks using checkboxes and use bulk actions
+- **Reorder Tasks**: Hover over a task card to see the drag handle (grip icon),
+  then drag and drop to reorder tasks within the current page
 
 ### Filtering and Navigation
 

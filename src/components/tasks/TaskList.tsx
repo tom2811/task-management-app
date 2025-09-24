@@ -10,10 +10,26 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useDeleteTask } from "@/hooks/useDeleteTask";
+import { useReorderTasks } from "@/hooks/useReorderTasks";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Loader2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { type Task } from "../../store/taskStore";
-import { TaskCard } from "./TaskCard";
+import { type Task, type TaskFilter } from "../../store/taskStore";
+import { DraggableTaskCard } from "./DraggableTaskCard";
 
 interface TaskListProps {
   tasks: Task[];
@@ -24,6 +40,7 @@ interface TaskListProps {
   isError: boolean;
   error: Error | null;
   refetch: () => void;
+  filter: TaskFilter;
 }
 
 export const TaskList = ({
@@ -37,13 +54,45 @@ export const TaskList = ({
   refetch,
 }: TaskListProps) => {
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [localTasks, setLocalTasks] = useState<Task[]>(tasks);
   const { mutate: deleteTaskMutation, isPending: isDeleting } = useDeleteTask();
+  const { mutate: reorderTasksMutation, isPending: isReordering } =
+    useReorderTasks();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     if (!isLoading && tasks.length === 0 && page > 1) {
       setPage(page - 1);
     }
   }, [tasks.length, page, setPage, isLoading]);
+
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = localTasks.findIndex((task) => task.id === active.id);
+      const newIndex = localTasks.findIndex((task) => task.id === over.id);
+
+      const reorderedTasks = arrayMove(localTasks, oldIndex, newIndex);
+      setLocalTasks(reorderedTasks);
+
+      // Persist the new order
+      reorderTasksMutation({
+        reorderedTasks,
+        originalTasks: tasks,
+      });
+    }
+  };
 
   const handleDeleteConfirm = () => {
     if (taskToDelete) {
@@ -91,17 +140,34 @@ export const TaskList = ({
 
   return (
     <>
-      {/* Task Grid */}
+      {/* Task Grid with Drag and Drop */}
       <section className="space-y-4">
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              onDelete={() => setTaskToDelete(task)}
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={localTasks.map((task) => task.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {localTasks.map((task) => (
+                <DraggableTaskCard
+                  key={task.id}
+                  task={task}
+                  onDelete={() => setTaskToDelete(task)}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+        {isReordering && (
+          <div className="flex justify-center items-center py-2">
+            <Loader2Icon className="animate-spin h-4 w-4 text-gray-500 mr-2" />
+            <span className="text-sm text-gray-500">Saving order...</span>
+          </div>
+        )}
       </section>
 
       {/* Pagination */}

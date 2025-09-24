@@ -64,7 +64,8 @@ export const TaskCard = ({ task, onDelete }: TaskCardProps) => {
   const handleCardClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (
-      target.closest('button, input, a, [role="combobox"], [role="option"]')
+      target.closest('button, input, a, [role="combobox"], [role="option"]') ||
+      e.defaultPrevented
     ) {
       return;
     }
