@@ -143,7 +143,7 @@ export const TaskCard = ({ task, onDelete }: TaskCardProps) => {
                 priorityConfig[task.priority].styles
               )}
             >
-              {task.priority}
+              {task.priority.toUpperCase()}
               {priorityConfig[task.priority].icon}
             </span>
           </p>

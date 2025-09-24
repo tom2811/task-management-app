@@ -80,9 +80,9 @@ export const TaskForm = ({ onClose }: TaskFormProps) => {
             className="w-full p-2 border rounded-md"
             disabled={isPending}
           >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option value="low">LOW</option>
+            <option value="medium">MEDIUM</option>
+            <option value="high">HIGH</option>
           </select>
         )}
       />
