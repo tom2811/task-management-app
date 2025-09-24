@@ -3,31 +3,38 @@ import { TaskFilter } from "@/components/tasks/TaskFilter";
 import { TaskFormModal } from "@/components/tasks/TaskFormModal";
 import { TaskList } from "@/components/tasks/TaskList";
 import { useGetTasks } from "@/hooks/useGetTasks";
-import { useTaskStore } from "@/store/taskStore";
-import { useEffect, useState } from "react";
+import type { TaskFilter as TaskFilterType } from "@/store/taskStore";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export const TaskPage = () => {
-  const getInitialPage = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const pageParam = urlParams.get("page");
-    return pageParam ? Math.max(1, parseInt(pageParam, 10)) : 1;
-  };
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [currentPage, setCurrentPage] = useState(getInitialPage);
-  const filter = useTaskStore((state) => state.filter);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const validFilters: TaskFilterType[] = ["all", "active", "completed"];
+  const filter = validFilters.includes(
+    searchParams.get("filter") as TaskFilterType
+  )
+    ? (searchParams.get("filter") as TaskFilterType)
+    : "all";
 
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    if (currentPage === 1) {
-      url.searchParams.delete("page");
-    } else {
-      url.searchParams.set("page", currentPage.toString());
-    }
-    window.history.replaceState({}, "", url.toString());
-  }, [currentPage]);
+  const setPage = useCallback(
+    (newPage: number) => {
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (newPage === 1) {
+          newParams.delete("page");
+        } else {
+          newParams.set("page", newPage.toString());
+        }
+        return newParams;
+      });
+    },
+    [setSearchParams]
+  );
 
   const { data, isLoading, isError, error, refetch } = useGetTasks({
-    page: currentPage,
+    page,
     filter,
   });
 
@@ -49,8 +56,8 @@ export const TaskPage = () => {
       <TaskList
         tasks={tasks}
         totalCount={totalCount}
-        page={currentPage}
-        setPage={setCurrentPage}
+        page={page}
+        setPage={setPage}
         isLoading={isLoading}
         isError={isError}
         error={error}
